@@ -1,0 +1,21 @@
+.questionviewcontainer {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  background-color: rgba(234, 238, 243, 1);
+}
+
+.questionviewmain {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  width: 62%;
+}
+
+.questionviewtransactionslist {
+  background-color: white;
+  padding: 15px;
+}

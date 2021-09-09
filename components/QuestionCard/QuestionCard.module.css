@@ -1,0 +1,36 @@
+.question {
+  display: flex;
+  border-bottom: 1px solid rgba(232, 232, 2321);
+  padding-bottom: 12px;
+  margin: 20px 0;
+  /*cursor: pointer; */
+  background-color: white;
+  padding: 15px;
+}
+
+.questiondetails {
+  display: flex;
+  flex-direction: column;
+}
+
+.questionname h3 {
+  margin-top: 0;
+  margin-bottom: 5px;
+}
+
+.questionbalance {
+  color: black;
+  padding: 7px 0;
+}
+
+.questioncreated_at {
+  font-weight: 100;
+}
+
+.questioncreated_at :nth-child(1) {
+  padding-right: 14px;
+}
+
+.questioncreated_at :nth-child(2) {
+  padding-right: 3px;
+}
