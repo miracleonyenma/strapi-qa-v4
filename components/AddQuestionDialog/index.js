@@ -10,9 +10,11 @@ export default function AddQuestionDialog({ closeModal }) {
     const user = window.user.value;
 
     // add question
-    await axios.post("http://localhost:1337/questions", {
-      qText,
-      user,
+    await axios.post("http://localhost:1337/api/questions", {
+      data: {
+        qText,
+        user,
+      }
     });
     setDisable(false);
     closeModal();

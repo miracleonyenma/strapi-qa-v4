@@ -4,29 +4,34 @@ import axios from "axios";
 import { useEffect, useState, useRef } from "react";
 import { MsgIcon } from "../../components/QuestionCard";
 
-export default function Question() {
+export const getServerSideProps = async ({ params }) => {
+  const { id } = params
+
+  const question = await axios.get(`http://localhost:1337/api/questions/${id}?populate=*`);
+  const { data: { attributes: { answers } } } = question.data
+
+  const comments = await axios.get(`http://localhost:1337/api/comments?populate=*`);
+  console.log(question);
+  console.log(answers);
+  return {
+    props: {
+      id,
+      question: question.data.data,
+      answers: answers.data,
+      comments: comments.data.data
+    }
+  }
+}
+
+export default function Question({ id, question, answers, comments }) {
+
   const router = useRouter();
-  const {
-    query: { id },
-  } = router;
 
-  const [question, setQuestion] = useState();
-  const [answers, setAnswers] = useState([]);
   const [showAnswerQuestionSection, setAnswerQuestionSection] = useState(false);
-
-  useEffect(async () => {
-    if (!id) return;
-    const QuestionData = await axios.get(
-      "http://localhost:1337/questions/" + id
-    );
-    var answersData = QuestionData?.data?.answers;
-    setQuestion(QuestionData?.data);
-    setAnswers(answersData);
-  }, [id]);
 
   async function deleteQuestion() {
     if (confirm("Do you really want to delete this question?")) {
-      await axios.delete("http://localhost:1337/questions/" + id);
+      await axios.delete(`http://localhost:1337/api/questions/${id}`);
       router.push("/");
     }
   }
@@ -36,7 +41,7 @@ export default function Question() {
       <div className={styles.questionviewmain}>
         <div style={{ width: "100%" }}>
           <div className={styles.questionviewname}>
-            <h1>{question?.qText}</h1>
+            <h1>{question?.attributes.qText}</h1>
           </div>
           <div className={styles.questionviewminidet}>
             <div style={{ display: "flex" }}>
@@ -90,9 +95,7 @@ export default function Question() {
             >
               {!answers || answers?.length <= 0
                 ? "No Answers yet."
-                : answers
-                    ?.sort((a, b) => b.created_at.localeCompare(a.created_at))
-                    ?.map((answer, i) => <Answer key={i} answer={answer} />)}
+                : answers?.map((answer, i) => <Answer key={answer.id} answer={answer} comments={comments} />)}
             </div>
           </div>
         </div>
@@ -101,34 +104,31 @@ export default function Question() {
   );
 }
 
-function Answer({ answer }) {
-  const { aText, user, id } = answer;
+function Answer({ answer, comments }) {
+  const { id } = answer
+  const { aText, user } = answer.attributes;
 
-  const [comments, setComments] = useState([]);
+  console.log({ comments });
+
+  const [_comments, setComments] = useState(comments ? comments.filter(comment => comment.attributes.answer.data?.id == id) : []);
+
+  console.log(id, comments);
+
   const [showCommentInput, setShowCommentInput] = useState(false);
   const commentRef = useRef();
   const userRef = useRef();
 
-  useEffect(async () => {
-    const data = await axios.get("http://localhost:1337/comments/");
-    const _comments = data?.data?.filter(
-      (comment) => comment?.answer?.id == id
-    );
-    setComments(_comments);
-  }, []);
-
   async function addComment() {
-    const resultData = await axios.post("http://localhost:1337/comments/", {
-      cText: commentRef.current.value,
-      user: userRef.current.value,
-      answer: id,
+    const resultData = await axios.post("http://localhost:1337/api/comments", {
+      data: {
+        cText: commentRef.current.value,
+        user: userRef.current.value,
+        answer: id,
+      }
     });
-    // set the comments to the comments state
-
-    setComments((pV) => [...pV, resultData?.data]);
-    userRef.current.value = "";
-    commentRef.current.value = "";
     setShowCommentInput(false);
+    window.location.reload();
+
   }
 
   return (
@@ -177,7 +177,7 @@ function Answer({ answer }) {
           onClick={() => setShowCommentInput((pV) => !pV)}
         >
           <MsgIcon />
-          <span style={{ paddingLeft: "6px" }}>{comments?.length}</span>
+          <span style={{ paddingLeft: "6px" }}>{_comments?.length}</span>
         </div>
         <div>
           {showCommentInput ? (
@@ -228,11 +228,9 @@ function Answer({ answer }) {
             marginBottom: "14px",
           }}
         >
-          {comments
-            ?.sort((a, b) => b.created_at.localeCompare(a.created_at))
-            .map((comment, i) => (
-              <Comment key={i} comment={comment} />
-            ))}
+          {_comments?.map((comment) => (
+            <Comment key={comment.id} comment={comment} />
+          ))}
         </div>
       </div>
     </div>
@@ -240,7 +238,7 @@ function Answer({ answer }) {
 }
 
 function Comment({ comment }) {
-  const { user, cText } = comment;
+  const { user, cText } = comment.attributes;
   return (
     <div
       className={styles.question}
@@ -302,10 +300,12 @@ function AnswerQuestionSection({ question }) {
 
   function answerQuestion() {
     setDisable(true);
-    axios.post("http://localhost:1337/answers", {
-      aText: q.getText(),
-      user: userRef.current.value,
-      question: question?.id,
+    axios.post("http://localhost:1337/api/answers", {
+      data: {
+        aText: q.getText(),
+        user: userRef.current.value,
+        question: question?.id,
+      }
     });
     setDisable(false);
     window.location.reload();

@@ -2,7 +2,8 @@ import styles from "./QuestionCard.module.css";
 import Link from "next/link";
 
 export default function QuestionCard({ question }) {
-  const { id, qText, user, answers } = question;
+  const { id } = question
+  const { qText, user, answers } = question.attributes;
 
   return (
     <div className={styles.question}>

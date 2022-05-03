@@ -5,14 +5,20 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 import AddQuestionDialog from "../components/AddQuestionDialog";
-export default function Home() {
-  const [questions, setQuestions] = useState([]);
-  const [showAddQuestionModal, setShowAddQuestionModal] = useState(false);
 
-  useEffect(async () => {
-    const data = await axios.get("http://localhost:1337/questions");
-    setQuestions(data?.data);
-  }, []);
+
+export const getServerSideProps = async () => {
+  const { data } = await axios.get("http://localhost:1337/api/questions?populate=*");
+  console.log(data);
+  return {
+    props: {
+      the_questions: data.data
+    }
+  }
+}
+
+export default function Home({ the_questions }) {
+  const [showAddQuestionModal, setShowAddQuestionModal] = useState(false);
 
   return (
     <div className={styles.container}>
@@ -40,11 +46,9 @@ export default function Home() {
 
         <div className={styles.questioncontainerr}>
           <div>
-            {questions
-              ?.sort((a, b) => b.created_at.localeCompare(a.created_at))
-              .map((question, i) => (
-                <QuestionCard key={i} question={question} />
-              ))}
+            {the_questions?.map((question) => (
+              <QuestionCard key={question.id} question={question} />
+            ))}
           </div>
         </div>
         {showAddQuestionModal ? (
